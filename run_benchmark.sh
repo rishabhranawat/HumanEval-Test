@@ -20,3 +20,5 @@ cat "$input_file1" "$input_file2" > "$output_file"
 
 # Execute the merged Python script
 python "$output_file"
+
+rm "$output_file"
