@@ -3,25 +3,30 @@ from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from openai import OpenAI
 import os
+import inflect
 
 TOGETHER_API_KEY = os.environ.get("TOGETHER_API_KEY")
 
-dataset = load_dataset("openai_humaneval")
+inflect_engine = inflect.engine()
+dataset = load_dataset("THUDM/humaneval-x")
 client = OpenAI(
   api_key=TOGETHER_API_KEY,
   base_url='https://api.together.xyz/v1',
 )
 
-def get_model_completion(model, prompt):
+def get_model_completion(model, prompt, task_id):
     chat_completion = client.chat.completions.create(
         messages=[
             {
             "role": "system",
-            "content": "You are an experiment software engineer.",
+            "content": "You are an expert software engineer. \
+                You make sure that your code is runnable as is and you do not write unnecesary comments.",
             },
             {
             "role": "user",
-            "content": f"Write a comprehensive test suite in Python for the following scenario \n {prompt}",
+            "content": f"Write a comprehensive test suite in Python for the following function: \n {prompt}. \n \
+                 Please do not include any explanation or the actual function itself. Create the output such that it is a Python file itself. \
+                Start the code with the following declaration: from {task_id} import *",
             }
         ],
         model=model
@@ -31,23 +36,20 @@ def get_model_completion(model, prompt):
 def evaluate_model(model_name, model_output_prefix):
     # Iterate over the tasks in the dataset
     for i, task in enumerate(dataset['test']):
+        if i > 4: break
         print(f"Running HumanEval-Test generation for {i+1}")
-        # Prepare the prompt
-        prompt = task['prompt']
         canonical_solution = task['canonical_solution']
-        input_prompt = f"{prompt} \n We can solve this using the following Python program: \n {canonical_solution}"
         
-        completion = get_model_completion(model_name, input_prompt)
+        task_id = inflect_engine.number_to_words(int(task['task_id'].split('/')[1]))
+
+        completion = get_model_completion(model_name, canonical_solution, task_id)
 
         # Save the generated code to a file
-        file_name = f"{model_output_prefix}/{task['task_id'].split('/')[1]}.py"
+        file_name = f"{model_output_prefix}/{task_id}.py"
         with open(file_name, 'w') as file:
-            file.write("# Generated code for task " + str(i+1) + "\n")
-            file.write("def solution():\n")
             # Ensuring the generated code is correctly indented as a function body
             completion_indented = '\n'.join('    ' + line for line in completion.split('\n'))
             file.write(completion_indented)
-            file.write("\n\n# You can add tests or other function calls here.\n")
 
     return "Completed writing generated code to files."
 
