@@ -14,7 +14,6 @@ def _extract_solutions():
 
     all_solutions = []
     for i, task in enumerate(dataset['test']):
-        if i > 4: break
         print(f"Running HumanEval-Test Code Extraction for {i+1}")
 
         declaration = task['declaration']
