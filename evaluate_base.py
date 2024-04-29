@@ -1,19 +1,16 @@
 import unittest
-import coverage
-import inflect
 
-import numpy as np
+import coverage
 
 from solutions import *
 
-engine = inflect.engine()
 
-def compute_coverage(test_module):
+def compute_coverage():
     try:
         loader = unittest.TestLoader()
 
         # Load tests from the class
-        suite = loader.loadTestsFromTestCase(test_module)
+        suite = loader.discover('.', pattern='evaluate.py')
 
         # Create a test runner and run the tests
         runner = unittest.TextTestRunner()
@@ -21,17 +18,13 @@ def compute_coverage(test_module):
     except Exception as e:
         print(e)
 
+
 if __name__ == "__main__":
     scores = []
-    
+
     cov = coverage.Coverage(source=['solutions'])
     cov.start()
-    
-    for i in range(0, 164):
-        task_id = engine.number_to_words(i)
-        test_class_name = f'{task_id.capitalize()}Test'
-        compute_coverage(globals().get(test_class_name))
-    
+    compute_coverage()
     cov.stop()
     cov.save()
 
