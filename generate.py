@@ -3,8 +3,8 @@ import sys
 
 import inflect
 import openai
+import time
 from datasets import load_dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 TOGETHER_API_KEY = os.environ.get("TOGETHER_API_KEY")
 OPEN_AI_API_KEY = os.getenv('OPEN_AI_API_KEY')
@@ -45,27 +45,33 @@ def get_model_completion(model, function_code, task_id_class):
 def evaluate_model(model_name, model_output_prefix):
     generated_test_classes = []
     for i, task in enumerate(dataset['test']):
-        if i > 4: break
-        print(f"Running HumanEval-Test generation for {i+1}")
+        if i % 10 == 0:
+            time.sleep(10)
+            print('Sleeping for 10s to avoid getting rate limited.')
+        try:
+            print(f"Running HumanEval-Test generation for {i+1}")
 
-        declaration = task['declaration']
-        canonical_solution = task['canonical_solution']
-        function_code = declaration + '\n' + canonical_solution
-        
-        # get task_id in alphabetical form.
-        task_id = inflect_engine.number_to_words(int(task['task_id'].split('/')[1]))
-        test_class_name = f'{task_id.capitalize()}Test'
+            declaration = task['declaration']
+            canonical_solution = task['canonical_solution']
+            function_code = declaration + '\n' + canonical_solution
+            
+            # get task_id in alphabetical form.
+            task_id = inflect_engine.number_to_words(int(task['task_id'].split('/')[1]))
+            test_class_name = f'{task_id.capitalize()}Test'
 
-        # generate the actual completion using the specified model
-        completion = get_model_completion(model_name, function_code, test_class_name)
+            # generate the actual completion using the specified model
+            completion = get_model_completion(model_name, function_code, test_class_name)
 
-        completion_indented = '\n'.join(line for line in completion.split('\n'))
-        completion_indented = completion_indented.replace('```python', '')\
-            .replace('```', '')\
-                .replace("if __name__ == \'__main__\':", "")\
-                    .replace("unittest.main()", "")
+            completion_indented = '\n'.join(line for line in completion.split('\n'))
+            completion_indented = completion_indented.replace('```python', '')\
+                .replace('```', '')\
+                    .replace("if __name__ == \'__main__\':", "")\
+                        .replace("unittest.main()", "")
 
-        generated_test_classes.append(completion_indented)
+            generated_test_classes.append(completion_indented)
+        except Exception as e:
+            print(f"There was an exception, stopping at task {i}", e)
+            break
 
     with open(f"{model_output_prefix}_test.py", 'w') as file:
         file.write('\n'.join(generated_test_classes))

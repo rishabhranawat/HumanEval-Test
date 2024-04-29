@@ -27,7 +27,7 @@ if __name__ == "__main__":
     cov = coverage.Coverage(source=['solutions'])
     cov.start()
     
-    for i in range(0, 5):
+    for i in range(0, 164):
         task_id = engine.number_to_words(i)
         test_class_name = f'{task_id.capitalize()}Test'
         compute_coverage(globals().get(test_class_name))
