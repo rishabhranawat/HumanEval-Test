@@ -6,6 +6,9 @@ from absl import flags
 from openai import OpenAI
 from datasets import load_dataset
 
+import prompts
+from prompts import GenerateTestSuitPrompt, GenerateSelfCorrectionPrompt
+
 # Define flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('model_name', None,
@@ -14,6 +17,10 @@ flags.DEFINE_string('model_output_prefix', None,
                     'Prefix for the output model files')
 flags.DEFINE_string('model_backend', None,
                     'Backend for the model to use for inference')
+flags.DEFINE_string('prompt_strategy', None,
+                    'Prompt strategy to use for generating test cases')
+flags.DEFINE_integer(
+    'num_tasks', 10, 'Number of HumanEval examples to generate data for')
 
 
 def construct_client(model_backed):
@@ -38,7 +45,7 @@ def construct_client(model_backed):
         raise ValueError("Invalid model backend specified.")
 
 
-def get_model_completion(client, model, function_code, output_test_class_name):
+def get_model_completion(client, model, prompt_strategy, function_code, output_test_class_name):
     """
     Gets a model completion from OpenAI.
 
@@ -56,32 +63,33 @@ def get_model_completion(client, model, function_code, output_test_class_name):
     """
     response = client.chat.completions.create(
         model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": "You are an expert test software engineer."
-            },
-            {
-                "role": "user",
-                "content": f"For the following Python function, \
-                    create a unnittest class named {output_test_class_name} that tests this function appropriately. \
-                        Do not include the actual input function \n \
-                        Do not include any import statements. \n \
-                        Do not output anything other than the {output_test_class_name} class definition itself.\
-                        Do not include any comments. \n \
-                        ```{function_code}```"
-            }
-        ],
+        messages=GenerateTestSuitPrompt(output_test_class_name, function_code),
         temperature=1,
         max_tokens=1024,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0
     )
-    return response.choices[0].message.content
+    test_suite_generated_response = response.choices[0].message.content
+    print(f'Generated response {test_suite_generated_response}')
+    if prompt_strategy == prompts.PROMPT_STRATEGY_SELF_CORRECT:
+        self_corrected_response = client.chat.completions.create(
+            model=model,
+            messages=GenerateSelfCorrectionPrompt(
+                test_suite_generated_response, output_test_class_name, function_code),
+            temperature=1,
+            max_tokens=1024,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
+        return self_corrected_response.choices[0].message.content
+    return test_suite_generated_response
 
 
-def evaluate_model(model_name, model_output_prefix, model_backend):
+def evaluate_model(model_name, model_output_prefix, model_backend,
+                   prompt_strategy=None,
+                   num_tasks=10):
     """
     Evaluates a model.
 
@@ -92,6 +100,7 @@ def evaluate_model(model_name, model_output_prefix, model_backend):
         model_name (str): The name of the model to evaluate.
         model_output_prefix (str): The prefix for the output files where the results will be saved.
         model_backend (str): The backend to use for the evaluation (e.g., 'tensorflow', 'pytorch').
+        num_tasks (int): The number of tasks to evaluate the model on.
 
     Returns:
         None
@@ -102,7 +111,10 @@ def evaluate_model(model_name, model_output_prefix, model_backend):
 
     generated_test_classes = []
     for i, task in enumerate(dataset['test']):
-        if i % 10 == 0:
+        if i >= num_tasks:
+            print('Generated Data for {num_tasks} tasks. Exiting')
+            break
+        if i % 5 == 0:
             time.sleep(10)
             print('Sleeping for 10s to avoid getting rate limited.')
         try:
@@ -117,7 +129,7 @@ def evaluate_model(model_name, model_output_prefix, model_backend):
 
             # generate the actual completion using the specified model
             completion = get_model_completion(
-                client, model_name, function_code, test_class_name)
+                client, model_name, prompt_strategy, function_code, test_class_name)
 
             completion_indented = '\n'.join(
                 line for line in completion.split('\n'))
@@ -154,7 +166,7 @@ def main(argv):
                 for output prefix: {FLAGS.model_output_prefix}")
 
     evaluate_model(FLAGS.model_name, FLAGS.model_output_prefix,
-                   FLAGS.model_backend)
+                   FLAGS.model_backend, FLAGS.prompt_strategy, FLAGS.num_tasks)
 
 
 if __name__ == '__main__':

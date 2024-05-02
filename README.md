@@ -33,6 +33,22 @@ The effectiveness of the tests will be measured using the following criteria, im
 1. **Coverage (V0)** - Evaluates how well the tests cover the code.
 2. **Ablation (V1)** - Assesses the impact of removing certain parts of the test on the overall test effectiveness.
 
+## How To Use
+To generate the test evaluations for a given model, you can use the `generate.py` module like so:
+
+```
+python generate.py \
+    --model_name=gpt-3.5-turbo \
+    --model_output_prefix=gpt_35_turbo_v3 \
+    --model_backend=openai \
+    --num_tasks=5 \
+    --prompt_strategy=SELF_CORRECT
+```
+Once you have a `_test.py` file generated, you can run the coverage benchmark:
+```
+sh run_benchmark.sh generated-tests/gpt_35_turbo_test.py 
+```
+
 ## References
 
 1. **HumanEval**: Evaluating Large Language Models Trained on Code
