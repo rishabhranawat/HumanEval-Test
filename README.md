@@ -42,7 +42,7 @@ python generate.py \
     --model_output_prefix=gpt_35_turbo_v3 \
     --model_backend=openai \
     --num_tasks=5 \
-    --prompt_strategy=SELF_CORRECT
+    --prompt_strategy=PROMPT_STRATEGY_SELF_CORRECT
 ```
 Once you have a `_test.py` file generated, you can run the coverage benchmark:
 ```

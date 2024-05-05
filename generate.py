@@ -7,7 +7,6 @@ from openai import OpenAI
 from datasets import load_dataset
 
 import prompts
-from prompts import GenerateTestSuitPrompt, GenerateSelfCorrectionPrompt
 
 # Define flags
 FLAGS = flags.FLAGS
@@ -17,8 +16,8 @@ flags.DEFINE_string('model_output_prefix', None,
                     'Prefix for the output model files')
 flags.DEFINE_string('model_backend', None,
                     'Backend for the model to use for inference')
-flags.DEFINE_string('prompt_strategy', None,
-                    'Prompt strategy to use for generating test cases')
+flags.DEFINE_enum('prompt_strategy', default='PROMPT_STRATEGY_BASE',
+                  enum_values=prompts.PrompStrategy.__members__.keys(), help='Choose a prompt strategy')
 flags.DEFINE_integer(
     'num_tasks', 10, 'Number of HumanEval examples to generate data for')
 
@@ -45,46 +44,38 @@ def construct_client(model_backed):
         raise ValueError("Invalid model backend specified.")
 
 
-def get_model_completion(client, model, prompt_strategy, function_code, output_test_class_name):
+def execute_chain(client, model, prompt_strategy, function_code, output_test_class_name) -> str:
     """
-    Gets a model completion from OpenAI.
+    Executes a chain of prompts and returns the model's output.
 
-    This function uses the OpenAI client to generate a completion from the given model and function code,
-    and then formats the completion into a test class with the provided name.
+    This function takes a strategy for generating prompts, creates a chain of prompts based on this strategy,
+    and then iteratively feeds these prompts to the model, updating the context with the model's output after each prompt.
+    The final output of the model is returned.
 
     Args:
         client (openai.Client): An instance of the OpenAI client.
         model (str): The name of the model to use for the completion.
         function_code (str): The code of the function to generate a completion for.
         output_test_class_name (str): The name of the test class to format the completion into.
+        prompt_strategy (str): The strategy to use for generating prompts.
 
     Returns:
-        response (openai.Response): The response from the model, containing the completion.
+        model_output (str): The final output of the model after executing the chain of prompts.
     """
-    response = client.chat.completions.create(
-        model=model,
-        messages=GenerateTestSuitPrompt(output_test_class_name, function_code),
-        temperature=1,
-        max_tokens=1024,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0
-    )
-    test_suite_generated_response = response.choices[0].message.content
-    print(f'Generated response {test_suite_generated_response}')
-    if prompt_strategy == prompts.PROMPT_STRATEGY_SELF_CORRECT:
-        self_corrected_response = client.chat.completions.create(
+    prompt_chain: list[prompts.Prompt] = prompts.GetPromptChainForStrategy(
+        prompt_strategy)
+
+    chain_context = {"function_code": function_code,
+                     "output_test_class_name": output_test_class_name,
+                     "model_output": None}
+    for prompt in prompt_chain:
+        input = prompt.SubAndGet(chain_context)
+        output = client.chat.completions.create(
             model=model,
-            messages=GenerateSelfCorrectionPrompt(
-                test_suite_generated_response, output_test_class_name, function_code),
-            temperature=1,
-            max_tokens=1024,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
+            messages=input,
         )
-        return self_corrected_response.choices[0].message.content
-    return test_suite_generated_response
+        chain_context["model_output"] = output.choices[0].message.content
+    return chain_context["model_output"]
 
 
 def evaluate_model(model_name, model_output_prefix, model_backend,
@@ -128,7 +119,7 @@ def evaluate_model(model_name, model_output_prefix, model_backend,
             test_class_name = f"Generated{int(task['task_id'].split('/')[1])}Test"
 
             # generate the actual completion using the specified model
-            completion = get_model_completion(
+            completion = execute_chain(
                 client, model_name, prompt_strategy, function_code, test_class_name)
 
             completion_indented = '\n'.join(
@@ -146,7 +137,10 @@ def evaluate_model(model_name, model_output_prefix, model_backend,
             break
 
     with open(f"{model_output_prefix}_test.py", 'w') as file:
+        file.write('import unittest\n')
+        file.write('from unittest import TestCase\n')
         file.write('\n'.join(generated_test_classes))
+        file.write('\n')
 
     return "Completed writing generated code to files."
 
