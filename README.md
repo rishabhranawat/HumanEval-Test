@@ -50,14 +50,20 @@ sh run_benchmark.sh generated-tests/gpt_35_turbo_test.py
 ```
 
 ## Results
+We report the coverage of the generated tests.
+
 | Model       | Base   | Self Correct | Self Correct and Verbal RL |
 |-------------|--------|--------------|----------------------------|
 | GPT-3.5-Turbo | 73.13% | 73.88%     | 73.13%                     |
 | Llama70b    | 1.49%  | 1.49%        | 1.49%                      |
 
+- Caveats: Not all tests passed for any of the models.
+
 - Both models required some Human Edits but GPT-3.5 required significantly fewer (~2) and they were mostly semantic that one could probably fix using some additional prompting or few shot examples.
 
 - The Llama70b results are not valid because it uses `assert` instead of the unittest methods `assertEquals` or equivalent. This causes the coverage report to exit early. I prefer to use this as a flaw in the model's ability. Besides, it required a lot more edits that GPT-3.5.
+
+- It is quite impressive that they can generate such tests, however, to generate work-able code with just some vanilla prompting techniques seems brittle.
 
 ## References
 
