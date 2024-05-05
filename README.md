@@ -50,7 +50,7 @@ sh run_benchmark.sh generated-tests/gpt_35_turbo_test.py
 ```
 
 ## Results
-We report the coverage of the generated tests.
+We report the coverage of the generated tests. `f` below is the number of failures.
 
 | Model         | Base          | Self Correct    | Self Correct and Tool Use  |
 |---------------|---------------|-----------------|----------------------------|
