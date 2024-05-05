@@ -1,215 +1,239 @@
 import unittest
 from unittest import TestCase
 
-class Generated0Test:
+
+class Generated0Test(unittest.TestCase):
+
+    def setUp(self):
+        self.numbers = [1.0, 2.0, 3.0, 4.0, 5.0]
+        self.threshold = 0.1
+
     def test_has_close_elements(self):
-        numbers = [1.0, 2.0, 3.0, 4.0, 5.0]
-        threshold = 0.1
-        assert has_close_elements(numbers, threshold) is True
-
-    def test_has_close_elements_different_threshold(self):
-        numbers = [1.0, 2.0, 3.0, 4.0, 5.0]
-        threshold = 0.2
-        assert has_close_elements(numbers, threshold) is False
+        self.assertTrue(has_close_elements(self.numbers, self.threshold))
 
 
+class Generated1Test(unittest.TestCase):
 
-class Generated1Test:
+    def setUp(self):
+        self.paren_string = '(())(())'
+
     def test_separate_paren_groups(self):
-        assert separate_paren_groups("(())") == ["(())"]
-        assert separate_paren_groups("(())())") == ["(())", "(())()"]
-        assert separate_paren_groups("(())(())") == ["(())", "(())", "(())"]
+        self.assertEqual(separate_paren_groups(self.paren_string), ['(())', '(())'])
 
 
 
-class Generated2Test:
+class Generated2Test(unittest.TestCase):
+
     def test_truncate_number(self):
-        self.assertEqual(truncate_number(5.0), 0.0)
-        self.assertEqual(truncate_number(5.5), 0.0)
-        self.assertEqual(truncate_number(6.0), 0.0)
-        self.assertEqual(truncate_number(6.5), 1.0)
+        self.assertEqual(truncate_number(5.0), 5.0)
+        self.assertEqual(truncate_number(5.5), 5.0)
+        self.assertEqual(truncate_number(6.0), 6.0)
+        self.assertEqual(truncate_number(6.5), 6.0)
 
 
 
-class Generated3Test:
+
+class Generated3Test(unittest.TestCase):
+
+    def setUp(self):
+        self.operations = [1, -2, 3, -4, 5]
+
     def test_below_zero(self):
-        operations1 = [1, -2, 3, 4, -5]
-        self.assertEqual(below_zero(operations1), True)
+        self.assertEqual(below_zero(self.operations), True)
 
-        operations2 = [1, 2, 3, 4, 5]
-        self.assertEqual(below_zero(operations2), False)
+    def test_below_zero_with_positive_operations(self):
+        self.operations = [1, 2, 3, 4, 5]
+        self.assertEqual(below_zero(self.operations), False)
 
 
 
-class Generated4Test:
+
+class Generated4Test(unittest.TestCase):
+
+    def setUp(self):
+        self.numbers = [1, 2, 3, 4, 5]
+
     def test_mean_absolute_deviation(self):
-        numbers = [1, 2, 3, 4, 5]
-        self.assertEqual(mean_absolute_deviation(numbers), 2.0)
+        self.assertEqual(mean_absolute_deviation(self.numbers), 2.0)
 
-    def test_mean_absolute_deviation_with_empty_list(self):
-        self.assertEqual(mean_absolute_deviation([]), 0.0)
+class Generated5Test(unittest.TestCase):
 
-    def test_mean_absolute_deviation_with_one_element(self):
-        numbers = [1]
-        self.assertEqual(mean_absolute_deviation(numbers), 0.0)
+    def setUp(self):
+        self.numbers = [1, 2, 3, 4, 5]
+        self.delimeter = 2
 
-
-
-class Generated5Test:
-    def test_intersperse_empty(self):
-        assert intersperse([], 0) == []
-
-    def test_intersperse_single(self):
-        assert intersperse([1], 0) == [1]
-
-    def test_intersperse_multiple(self):
-        assert intersperse([1, 2, 3], 2) == [1, 2, 2, 3]
+    def test_intersperse(self):
+        self.assertEqual(intersperse(self.numbers, self.delimeter), [1, 2, 2, 3, 2, 4, 2, 5])
 
 
-class Generated6Test:
+
+class Generated6Test(unittest.TestCase):
+
+    def setUp(self):
+        self.paren_string = "(())(())()"
+
     def test_parse_nested_parens(self):
-        assert parse_nested_parens("(())") == [1]
-        assert parse_nested_parens("(())())") == [2]
-        assert parse_nested_parens("(())(())") == [2]
-        assert parse_nested_parens("(())(())())") == [3]
+        self.assertEqual(parse_nested_parens(self.paren_string), [2, 2])
+
+
+class Generated6Test(unittest.TestCase):
+
+    def setUp(self):
+        self.paren_string = "(())(())()"
+
+    def test_parse_nested_parens(self):
+        self.assertEqual(parse_nested_parens(self.paren_string), [2, 2])
 
 
 
-class Generated7Test:
+class Generated7Test(unittest.TestCase):
+
+    def setUp(self):
+        self.strings = ["abc", "bcd", "cde", "def"]
+        self.substring = "bcd"
+
     def test_filter_by_substring(self):
-        strings = ["abc", "bcd", "cde", "def"]
-        substring = "bcd"
-        result = filter_by_substring(strings, substring)
-        self.assertEqual(result, ["bcd"])
+        result = filter_by_substring(self.strings, self.substring)
+        self.assertEqual(result, ["bcd", "cde"])
 
 
+class Generated8Test(unittest.TestCase):
 
-class Generated8Test:
+    def setUp(self):
+        self.numbers = [1, 2, 3, 4, 5]
+
     def test_sum_product(self):
-        numbers = [1, 2, 3, 4, 5]
-        expected_sum_value = 16
-        expected_prod_value = 120
-
-        sum_value, prod_value = sum_product(numbers)
-
-        self.assertEqual(sum_value, expected_sum_value)
-        self.assertEqual(prod_value, expected_prod_value)
+        sum_value, prod_value = sum_product(self.numbers)
+        self.assertEqual(sum_value, 16)
+        self.assertEqual(prod_value, 120)
 
 
+class Generated9Test(unittest.TestCase):
 
-class Generated9Test:
+    def setUp(self):
+        self.numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
     def test_rolling_max(self):
-        numbers = [1, 2, 3, 4, 5]
-        expected_result = [2, 3, 4, 5, 5]
-        assert rolling_max(numbers) == expected_result
-
-    def test_rolling_max_with_empty_list(self):
-        numbers = []
-        expected_result = []
-        assert rolling_max(numbers) == expected_result
-
-    def test_rolling_max_with_one_element(self):
-        numbers = [1]
-        expected_result = [1]
-        assert rolling_max(numbers) == expected_result
+        self.assertEqual(rolling_max(self.numbers), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
 
+class Generated10Test(unittest.TestCase):
 
-class Generated10Test:
+    def setUp(self):
+        self.string = 'abcba'
+
+    def test_is_palindrome(self):
+        self.assertEqual(is_palindrome(self.string), True)
+
     def test_make_palindrome(self):
-        self.assertEqual(make_palindrome("abcba"), "abcba")
-        self.assertEqual(make_palindrome("abc"), "aba")
-        self.assertEqual(make_palindrome("ababa"), "aba")
+        self.assertEqual(make_palindrome(self.string), 'abcba')
 
 
 
+class Generated11Test(unittest.TestCase):
 
+    def setUp(self):
+        self.a = '1010'
+        self.b = '1011'
 
-def is_palindrome(string: str) -> bool:
-    """ Test if given string is a palindrome """
-    return string == string[::-1]
-
-
-
-class Generated11Test:
     def test_string_xor(self):
-        a = '1010'
-        b = '1011'
-        expected = '1001'
-        string_xor(a, b) == expected
+        self.assertEqual(string_xor(self.a, self.b), '1011')
 
 
 
-class Generated12Test:
+class Generated12Test(unittest.TestCase):
+
+    def setUp(self):
+        self.strings = ["abc", "abc", "bcd"]
+
     def test_longest(self):
-        strings = ["abc", "abc", "ab", "cde"]
-        longest(strings) == "abc"
-
-        strings = ["abc", "abc", "ab"]
-        longest(strings) == "abc"
-
-        strings = ["ab", "cde"]
-        longest(strings) == None
+        self.assertEqual(longest(self.strings), "abc")
 
 
-class Generated13Test:
+
+class Generated13Test(unittest.TestCase):
+
+    def setUp(self):
+        self.a = 12
+        self.b = 15
+
     def test_greatest_common_divisor(self):
-        self.assertEqual(greatest_common_divisor(12, 15), 3)
-        self.assertEqual(greatest_common_divisor(12, 16), 4)
-        self.assertEqual(greatest_common_divisor(2, 2), 2)
+        self.assertEqual(greatest_common_divisor(self.a, self.b), 3)
 
 
 
-class Generated14Test:
+
+class Generated13Test(unittest.TestCase):
+
+    def setUp(self):
+        self.a = 12
+        self.b = 15
+
+    def test_greatest_common_divisor(self):
+        self.assertEqual(greatest_common_divisor(self.a, self.b), 3)
+
+
+class Generated14Test(unittest.TestCase):
+
     def test_all_prefixes(self):
         string = "abc"
-        expected_result = ["ab", "a", "", "abc", "ab", "a"]
-        assert all_prefixes(string) == expected_result
+        result = all_prefixes(string)
+        self.assertEqual(result, ["a", "ab", "abc"])
+
+    def test_all_prefixes_empty(self):
+        string = ""
+        result = all_prefixes(string)
+        self.assertEqual(result, [])
+
+    def test_all_prefixes_single_character(self):
+        string = "a"
+        result = all_prefixes(string)
+        self.assertEqual(result, ["a"])
 
 
 
-class Generated15Test:
+class Generated15Test(unittest.TestCase):
+
     def test_string_sequence(self):
         self.assertEqual(string_sequence(0), '0')
         self.assertEqual(string_sequence(1), '0 1')
         self.assertEqual(string_sequence(2), '0 1 2')
-        self.assertEqual(string_sequence(3), '0 1 2 3')
 
 
-class Generated16Test:
+
+
+class Generated16Test(unittest.TestCase):
+
     def test_count_distinct_characters(self):
         self.assertEqual(count_distinct_characters("abc"), 3)
         self.assertEqual(count_distinct_characters("aab"), 2)
         self.assertEqual(count_distinct_characters("aaab"), 2)
 
 
-class Generated17Test:
+
+class Generated17Test(unittest.TestCase):
+
+    def setUp(self):
+        self.music_string = "o o| .| "
+
     def test_parse_music(self):
-        music_string = "o o| .| "
-        expected_output = [4, 2, 1]
-        assert parse_music(music_string) == expected_output
+        self.assertEqual(parse_music(self.music_string), [4, 2, 1])
 
 
-class Generated18Test:
-    def test_how_many_times_with_empty_string(self):
-        self.assertEqual(how_many_times("", ""), 0)
 
-    def test_how_many_times_with_no_substring(self):
-        self.assertEqual(how_many_times("abc", ""), 0)
+class Generated18Test(unittest.TestCase):
 
-    def test_how_many_times_with_substring_not_found(self):
-        self.assertEqual(how_many_times("abc", "def"), 0)
-
-    def test_how_many_times_with_substring_found_once(self):
-        self.assertEqual(how_many_times("abc", "ab"), 1)
-
-    def test_how_many_times_with_substring_found_twice(self):
+    def test_how_many_times(self):
         self.assertEqual(how_many_times("abc", "ab"), 2)
+        self.assertEqual(how_many_times("abc", "ab"), 2)
+        self.assertEqual(how_many_times("abc", "a"), 1)
 
 
-class Generated19Test:
+
+class Generated19Test(unittest.TestCase):
+
+    def setUp(self):
+        self.numbers = '1 3 5 2 4 6'
+
     def test_sort_numbers(self):
-        self.assertEqual(sort_numbers('1 2 3 4 5'), '1 2 3 4 5')
-        self.assertEqual(sort_numbers('5 4 3 2 1'), '1 2 3 4 5')
-        self.assertEqual(sort_numbers('1 2'), '1 2')
-
+        self.assertEqual(sort_numbers(self.numbers), '1 2 3 4 5 6')

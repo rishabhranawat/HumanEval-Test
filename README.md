@@ -52,21 +52,23 @@ sh run_benchmark.sh generated-tests/gpt_35_turbo_test.py
 ## Results
 We report the coverage of the generated tests.
 
-| Model       | Base   | Self Correct | Self Correct and Verbal RL |
-|-------------|--------|--------------|----------------------------|
-| GPT-3.5-Turbo | 73.13% | 73.88%     | 73.13%                     |
-| Llama70b    | NA  | NA        | NA                      |
-| Gemma-7b-it    | NA  | NA        | NA                      |
+| Model         | Base          | Self Correct    | Self Correct and Tool Use  |
+|---------------|---------------|-----------------|----------------------------|
+| GPT-3.5-Turbo | 73.13% (f=11) | 73.88% (f=18)   | 73.13% (f=11)              |
+| Llama70b      | 73.88% (f=49) | 73.88% (f=49)   | 73.88% (f=49)              |
+| Gemma-7b-it   | 70.14% (f=9)  | 44.77% (f=4)    | 44.77% (f=4)               |
 
 - You can find the results for all the three models and all the three startegies in results/{gpt35, llama70b, gemma7bit}.
 
 - Not all tests passed for any of the models.
 
-- All models required some Human Edits but GPT-3.5 required significantly fewer and they were mostly semantic that one could probably fix using some additional prompting or few shot examples.
+- All models required some Human Edits but GPT-3.5 the least and Gemma-7b the most. Note: these edits were mostly around the output language (for e.g., the non-code conversations) and there were no specific code that was human edited.
 
-- The Llama-70b and Gemma-7b-it results are not valid because it uses `assert` instead of the unittest methods `assertEquals` or equivalent. This causes the coverage report to exit early. This could be fixed with further prompting.
+- It is quite impressive that Gemma-7b-it does comparably for the Base strategy. Using it where low latency test generation is critical seems quite plausible. (Although, ofcourse, this dataset is small and one can imagine the larger models doing better for tail end of the queries).
 
 - It is quite impressive that they can generate such tests, however, to generate work-able code with just some vanilla prompting techniques seems brittle.
+
+- The prompting self-correction/tool use does not add much value. We should be able to improve upon this and presents some opportunities. Why Gemma-7b-it does poorly on the tool use/self correction one is not completely clear and would require some further analysis.
 
 ## References
 

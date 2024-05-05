@@ -1,9 +1,9 @@
-python generate.py \
-    --model_name=meta-llama/Llama-2-70b-chat-hf \
-    --model_output_prefix=results/llama270b/base \
-    --model_backend=together \
-    --num_tasks=20 \
-    --prompt_strategy=PROMPT_STRATEGY_BASE;
+# python generate.py \
+#     --model_name=meta-llama/Llama-2-70b-chat-hf \
+#     --model_output_prefix=results/llama270b/base \
+#     --model_backend=together \
+#     --num_tasks=20 \
+#     --prompt_strategy=PROMPT_STRATEGY_BASE;
 
 python generate.py \
     --model_name=meta-llama/Llama-2-70b-chat-hf \

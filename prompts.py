@@ -30,6 +30,7 @@ class Prompt():
 def BasePrompt() -> Prompt:
     return Prompt(Template("For the following Python function, \
                     create a unnittest class named $output_test_class_name that tests this function appropriately. \
+                        Make sure that you use unittest.TestCase as the base class and use the appropriate assert methods. \
                         Do not include the actual input function \n \
                         Do not include any import statements. \n \
                         Do not output anything other than the $output_test_class_name class definition itself.\
