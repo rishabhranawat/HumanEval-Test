@@ -7,6 +7,8 @@ from openai import OpenAI
 from datasets import load_dataset
 
 import prompts
+import executor
+import utils
 
 # Define flags
 FLAGS = flags.FLAGS
@@ -44,30 +46,27 @@ def construct_client(model_backed):
         raise ValueError("Invalid model backend specified.")
 
 
-def execute_chain(client, model, prompt_strategy, function_code, output_test_class_name) -> str:
+def execute_chain(client, model, prompt_strategy, chain_context) -> str:
     """
     Executes a chain of prompts and returns the model's output.
 
-    This function takes a strategy for generating prompts, creates a chain of prompts based on this strategy,
-    and then iteratively feeds these prompts to the model, updating the context with the model's output after each prompt.
-    The final output of the model is returned.
+    This function takes a client, a model, a prompt strategy, and a chain context as input.
+    It uses the client and model to execute the prompt strategy within the given chain context,
+    and returns the final output of the model.
 
     Args:
         client (openai.Client): An instance of the OpenAI client.
         model (str): The name of the model to use for the completion.
-        function_code (str): The code of the function to generate a completion for.
-        output_test_class_name (str): The name of the test class to format the completion into.
         prompt_strategy (str): The strategy to use for generating prompts.
+        chain_context (str): The context in which to execute the chain of prompts.
 
     Returns:
-        model_output (str): The final output of the model after executing the chain of prompts.
+        str: The final output of the model after executing the chain of prompts.
     """
     prompt_chain: list[prompts.Prompt] = prompts.GetPromptChainForStrategy(
         prompt_strategy)
 
-    chain_context = {"function_code": function_code,
-                     "output_test_class_name": output_test_class_name,
-                     "model_output": None}
+    chain_context["model_output"] = None
     for prompt in prompt_chain:
         input = prompt.SubAndGet(chain_context)
         output = client.chat.completions.create(
@@ -113,23 +112,37 @@ def evaluate_model(model_name, model_output_prefix, model_backend,
 
             declaration = task['declaration']
             canonical_solution = task['canonical_solution']
-            function_code = declaration + '\n' + canonical_solution
+            indented_solution = '\n'.join(
+                '    ' + line for line in canonical_solution.split('\n'))
+            function_code = declaration + indented_solution
 
             # get task_id in alphabetical form.
             test_class_name = f"Generated{int(task['task_id'].split('/')[1])}Test"
 
             # generate the actual completion using the specified model
+            chain_context = {
+                "function_code": function_code,
+                "output_test_class_name": test_class_name,
+            }
             completion = execute_chain(
-                client, model_name, prompt_strategy, function_code, test_class_name)
+                client, model_name, prompt_strategy, chain_context)
 
-            completion_indented = '\n'.join(
-                line for line in completion.split('\n'))
-            completion_indented = completion_indented.replace('```python', '')\
-                .replace('```', '')\
-                .replace("if __name__ == \'__main__\':", "")\
-                .replace("if __name__ == \"__main__\":", "")\
-                .replace("unittest.main()", "")\
-                .replace("import unittest", "")
+            completion_indented = utils.format_generated_output(completion)
+
+            if prompt_strategy == prompts.PrompStrategy.PROMPT_STRATEGY_SELF_CORRECT_AND_VERBAL_RL.name:
+                passed, result = executor.execute(
+                    model_output_prefix, function_code, completion_indented)
+                print(f"Executing program: {passed}, {result}")
+                if not passed:
+                    chain_context["program_output"] = result
+                    completion = execute_chain(
+                        client,
+                        model_name,
+                        "PROMPT_STRATEGY_VERBAL_RL",
+                        chain_context
+                    )
+                    completion_indented = utils.format_generated_output(
+                        completion)
 
             generated_test_classes.append(completion_indented)
         except Exception as e:

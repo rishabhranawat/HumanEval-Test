@@ -5,6 +5,8 @@ from enum import Enum
 class PrompStrategy(Enum):
     PROMPT_STRATEGY_BASE = 1
     PROMPT_STRATEGY_SELF_CORRECT = 2
+    PROMPT_STRATEGY_VERBAL_RL = 3
+    PROMPT_STRATEGY_SELF_CORRECT_AND_VERBAL_RL = 4
 
 
 class Prompt():
@@ -25,7 +27,7 @@ class Prompt():
         ]
 
 
-def BasePrompt() -> Template:
+def BasePrompt() -> Prompt:
     return Prompt(Template("For the following Python function, \
                     create a unnittest class named $output_test_class_name that tests this function appropriately. \
                         Do not include the actual input function \n \
@@ -36,7 +38,7 @@ def BasePrompt() -> Template:
                            ))
 
 
-def GenerateSelfCorrectionPrompt() -> list:
+def GenerateSelfCorrectionPrompt() -> Prompt:
     return Prompt(Template("Your previous response was $model_output. \n Can you double check if violated any of the \
             following rules and correct accordingly?: \n \
             1. Do not include any import statements. \n \
@@ -44,11 +46,24 @@ def GenerateSelfCorrectionPrompt() -> list:
             3. Do not output a if __main__ code block. \n \
             4. Do not output anything other than the $output_test_class_name class"))
 
+def GenerateVerbalRLPrompt() -> Prompt:
+    return Prompt(Template(
+        "The result of this program is $program_output. \n \
+        Assume that the actual function being tested is accurate. \
+        Now, think about what does the test error mean? Once you understand that, fix the test suite.\
+        being tested is accurate. Do not include backticks, comments or any other formatting. \
+        Only output the corrected $output_test_class_name class"
+    ))
+
 
 def GetPromptChainForStrategy(strategy: PrompStrategy) -> list:
     if strategy == PrompStrategy.PROMPT_STRATEGY_BASE.name:
         return [BasePrompt()]
-    elif strategy == PrompStrategy.PROMPT_STRATEGY_SELF_CORRECT.name:
+    elif strategy in (
+        PrompStrategy.PROMPT_STRATEGY_SELF_CORRECT.name,
+        PrompStrategy.PROMPT_STRATEGY_SELF_CORRECT_AND_VERBAL_RL.name):
         return [BasePrompt(), GenerateSelfCorrectionPrompt()]
+    elif strategy == PrompStrategy.PROMPT_STRATEGY_VERBAL_RL.name:
+        return [GenerateVerbalRLPrompt()]
     else:
         raise ValueError("Invalid strategy")
