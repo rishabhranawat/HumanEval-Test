@@ -2,7 +2,7 @@ import unittest
 
 import coverage
 
-from solutions import *
+from solutions_20 import *
 
 
 def compute_coverage():
@@ -22,7 +22,7 @@ def compute_coverage():
 if __name__ == "__main__":
     scores = []
 
-    cov = coverage.Coverage(source=['solutions'])
+    cov = coverage.Coverage(source=['solutions_20'])
     cov.start()
     compute_coverage()
     cov.stop()

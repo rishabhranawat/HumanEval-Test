@@ -49,6 +49,16 @@ Once you have a `_test.py` file generated, you can run the coverage benchmark:
 sh run_benchmark.sh generated-tests/gpt_35_turbo_test.py 
 ```
 
+## Results
+| Model       | Base   | Self Correct | Self Correct and Verbal RL |
+|-------------|--------|--------------|----------------------------|
+| GPT-3.5-Turbo | 73.13% | 73.88%     | 73.13%                     |
+| Llama70b    | 1.49%  | 1.49%        | 1.49%                      |
+
+- Both models required some Human Edits but GPT-3.5 required significantly fewer (~2) and they were mostly semantic that one could probably fix using some additional prompting or few shot examples.
+
+- The Llama70b results are not valid because it uses `assert` instead of the unittest methods `assertEquals` or equivalent. This causes the coverage report to exit early. I prefer to use this as a flaw in the model's ability. Besides, it required a lot more edits that GPT-3.5.
+
 ## References
 
 1. **HumanEval**: Evaluating Large Language Models Trained on Code

@@ -51,8 +51,8 @@ def GenerateVerbalRLPrompt() -> Prompt:
         "The result of this program is $program_output. \n \
         Assume that the actual function being tested is accurate. \
         Now, think about what does the test error mean? Once you understand that, fix the test suite.\
-        being tested is accurate. Do not include backticks, comments or any other formatting. \
-        Only output the corrected $output_test_class_name class"
+        being tested is accurate. Do not include backticks, comments. \
+        Only output the corrected $output_test_class_name class. Make sure the indentation is correct."
     ))
 
 
